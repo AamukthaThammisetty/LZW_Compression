@@ -1,58 +1,62 @@
 import os
-import struct
-import time
+import streamlit as st
+from lzw_compress import compress
+from lzw_decompress import decompress
 
-def decompress(input_file):
-    start_time = time.time()
+def main():
+    st.title("LZW Compression & Decompression Tool")
+    st.write("Efficient file compression and decompression using the Lempel–Ziv–Welch (LZW) algorithm.")
 
-    with open(input_file, "rb") as f:
-        ext_len = struct.unpack("B", f.read(1))[0]
-        extension = f.read(ext_len).decode("utf-8")
-        compressed_data = []
+    mode = st.radio("Select Operation:", ("Compress a File", "Decompress a File"))
 
-        while True:
-            bytes_read = f.read(2)
-            if not bytes_read:
-                break
-            (code,) = struct.unpack(">H", bytes_read)
-            compressed_data.append(code)
+    if mode == "Compress a File":
+        uploaded_file = st.file_uploader("Upload a file to compress", type=None)
+        if uploaded_file is not None:
+            input_path = f"temp_{uploaded_file.name}"
+            with open(input_path, "wb") as f:
+                f.write(uploaded_file.read())
 
-    # Initialize dictionary
-    MAX_DICT_SIZE = 65535
-    dictionary = {i: bytes([i]) for i in range(256)}
-    dict_size = 256
+            if st.button("Compress"):
+                output_file, original_size, compressed_size, duration = compress(input_path)
 
-    current = bytes([compressed_data.pop(0)])
-    result = bytearray(current)
+                st.success("File compressed successfully!")
+                st.write(f"Original Size: {original_size / 1024:.2f} KB")
+                st.write(f"Compressed Size: {compressed_size / 1024:.2f} KB")
+                st.write(f"Compression Ratio: {(compressed_size / original_size) * 100:.2f}%")
+                st.write(f"Time Taken: {duration:.3f} seconds")
 
-    for code in compressed_data:
-        if code in dictionary:
-            entry = dictionary[code]
-        elif code == dict_size:
-            entry = current + current[:1]
-        else:
-            raise ValueError(f"Bad compressed code: {code}")
+                with open(output_file, "rb") as f:
+                    st.download_button(
+                        label= "Download Compressed File",
+                        data=f,
+                        file_name=os.path.basename(output_file),
+                        mime="application/octet-stream"
+                    )
 
-        result.extend(entry)
+    elif mode == "Decompress a File":
+        uploaded_file = st.file_uploader("Upload a .lzw file to decompress", type=["lzw"])
+        if uploaded_file is not None:
+            input_path = f"temp_{uploaded_file.name}"
+            with open(input_path, "wb") as f:
+                f.write(uploaded_file.read())
 
-        if dict_size < MAX_DICT_SIZE:
-            dictionary[dict_size] = current + entry[:1]
-            dict_size += 1
-        else:
-            # Reset dictionary if full
-            dictionary = {i: bytes([i]) for i in range(256)}
-            dict_size = 256
+            if st.button("Decompress"):
+                try:
+                    output_file, decompressed_size, duration = decompress(input_path)
 
-        current = entry
+                    st.success("File decompressed successfully!")
+                    st.write(f"Decompressed Size: {decompressed_size / 1024:.2f} KB")
+                    st.write(f"Time Taken: {duration:.3f} seconds")
 
-    output_file = f"decompressed/{os.path.splitext(os.path.basename(input_file))[0]}_decompressed{extension}"
-    os.makedirs("decompressed", exist_ok=True)
+                    with open(output_file, "rb") as f:
+                        st.download_button(
+                            label="Download Decompressed File",
+                            data=f,
+                            file_name=os.path.basename(output_file),
+                            mime="application/octet-stream"
+                        )
+                except Exception as e:
+                    st.error(f"Decompression failed: {e}")
 
-    with open(output_file, "wb") as f:
-        f.write(result)
-
-    end_time = time.time()
-    decompressed_size = os.path.getsize(output_file)
-    duration = end_time - start_time
-
-    return output_file, decompressed_size, duration
+if __name__ == "__main__":
+    main()
