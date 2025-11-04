@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>LZW File Compressor & Decompressor</title>
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f7fa;
+      margin: 20px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    form {
+      margin: 15px auto;
+      padding: 10px;
+      background: #fff;
+      border-radius: 10px;
+      width: 320px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="file"] {
+      margin: 10px 0;
+    }
+
+    .mode-selection {
+      margin: 10px 0;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #output {
+      margin-top: 20px;
+      text-align: left;
+      background: #fff;
+      display: inline-block;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      width: 350px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>🔹 LZW File Compressor & Decompressor</h2>
+
+  <form id="mainForm">
+    <input type="file" id="fileInput" required />
+    <div class="mode-selection">
+      <label><input type="radio" name="mode" value="compress" checked /> Compress</label>
+      <label><input type="radio" name="mode" value="decompress" /> Decompress</label>
+    </div>
+    <button type="button" id="processBtn">Start</button>
+  </form>
+
+  <div id="output">
+    <p>Upload a file and choose Compress or Decompress.</p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
