@@ -1,0 +1,403 @@
+﻿# --- Hill Cipher (2x2) without any inbuilt modules ---
+
+# Function to multiply key matrix and text vector
+def encrypt_pair(pair, key):
+x = (key[0][0]*pair[0] + key[0][1]*pair[1]) % 26
+y = (key[1][0]*pair[0] + key[1][1]*pair[1]) % 26
+return [x, y]
+
+# Function to find modular inverse of a number (mod 26)
+def mod_inverse(a, m=26):
+for i in range(1, m):
+if (a * i) % m == 1:
+return i
+return None  # if no inverse exists
+
+# Function to find inverse key matrix (2x2)
+def inverse_key(key):
+det = (key[0][0]*key[1][1] - key[0][1]*key[1][0]) % 26
+det_inv = mod_inverse(det)
+if det_inv is None:
+print("Key is not invertible! Choose another.")
+exit()
+
+# Inverse of 2x2 matrix
+inv = [
+[(key[1][1]*det_inv) % 26, (-key[0][1]*det_inv) % 26],
+[(-key[1][0]*det_inv) % 26, (key[0][0]*det_inv) % 26]
+]
+return inv
+
+# --- Main Program ---
+plain = input("Enter plaintext: ").upper().replace(" ", "")
+if len(plain) % 2 != 0:
+plain += 'X'   # padding if odd length
+
+# Get 2x2 key matrix using for loop
+print("Enter 4 numbers for 2x2 key matrix row-wise:")
+key = []
+for i in range(2):
+row = []
+for j in range(2):
+row.append(int(input(f"Key[{i+1}][{j+1}]: ")))
+key.append(row)
+
+# --- Encryption ---
+cipher = ""
+for i in range(0, len(plain), 2):
+p1 = ord(plain[i]) - 65
+p2 = ord(plain[i+1]) - 65
+c1, c2 = encrypt_pair([p1, p2], key)
+cipher += chr(c1 + 65) + chr(c2 + 65)
+
+print("\nEncrypted text:", cipher)
+
+# --- Decryption ---
+inv_key = inverse_key(key)
+decrypted = ""
+for i in range(0, len(cipher), 2):
+c1 = ord(cipher[i]) - 65
+c2 = ord(cipher[i+1]) - 65
+p1, p2 = encrypt_pair([c1, c2], inv_key)
+decrypted += chr(p1 + 65) + chr(p2 + 65)
+
+print("Decrypted text:", decrypted)
+
+----------------------------------------------------------------------------------------------------------
+
+#pts on ecc
+def is_on_curve(x, y, a, b, p):
+return (y**2) % p == (x**3 + a*x + b) % p
+
+def generate_points(a, b, p):
+"""Generate all points on the elliptic curve y^2 = x^3 + ax + b over F_p."""
+points = []
+for x in range(p):
+for y in range(p):
+if is_on_curve(x, y, a, b, p):
+points.append((x, y))
+return points
+
+# Input parameters
+print("Elliptic Curve: y^2 = x^3 + ax + b over F_p")
+a = int(input("Enter coefficient a: "))
+b = int(input("Enter coefficient b: "))
+p = int(input("Enter prime modulus p: "))
+
+# Validate curve
+if (4 * (a**3) + 27 * (b**2)) % p == 0:
+print("Invalid curve! The discriminant is zero, so the curve is singular.")
+else:
+points = generate_points(a, b, p)
+print(f"Points on the curve y^2 = x^3 + {a}x + {b} over F_{p}:")
+for point in points:
+print(point)
+print(f"Total number of points: {len(points) + 1} (including the point at infinity)")
+
+-------------------------------------------------------------------------------------------------------------
+
+def mod_inverse(a,m):
+m0 = m;
+x0,x1 = 0,1
+if m==1:
+return 0
+while a>1:
+q=a//m
+a,m = m,a%m
+x0,x1=x1-q*x0,x0
+if x1<0:
+x1+=m0
+return x1
+def crt(n,a):
+prod=1
+for i in n:
+prod*=i
+result=0
+for i in range(len(n)):
+p=prod//n[i]
+result+=a[i]*mod_inverse(p,n[i])*p
+return result%prod
+#Example
+k=int(input("Enter number of congruences:"))
+n=[]
+a=[]
+for i in range(k):
+ni=int(input(f"Enter modules n[{i+1}]:"))
+ai=int(input(f"Enter remainder a[{i+1}]:"))
+n.append(ni)
+a. append(ai)
+print("\nThe solution of the given system of congruence is:")
+print(crt(n,a))
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+
+# --- Point Addition on Elliptic Curve ---
+
+# Function to find modular inverse of a number (a^-1 mod p)
+def mod_inverse(a, p):
+a = a % p
+for i in range(1, p):
+if (a * i) % p == 1:
+return i
+return None
+
+# Function to add two points P and Q
+def add_points(a, p, P, Q):
+x1, y1 = P
+x2, y2 = Q
+
+# Case: Point at infinity
+if P == (None, None):
+return Q
+if Q == (None, None):
+return P
+
+# Case: x1 = x2 and y1 = -y2 mod p â†’ result is point at infinity
+if x1 == x2 and (y1 + y2) % p == 0:
+return (None, None)
+
+# Compute slope m
+if P != Q:  # Point addition
+num = (y2 - y1) % p
+den = (x2 - x1) % p
+else:  # Point doubling
+num = (3 * x1 * x1 + a) % p
+den = (2 * y1) % p
+
+inv = mod_inverse(den, p)
+if inv is None:
+print("No modular inverse found!")
+return (None, None)
+
+m = (num * inv) % p
+
+# Compute resulting point (x3, y3)
+x3 = (m * m - x1 - x2) % p
+y3 = (m * (x1 - x3) - y1) % p
+
+return (x3, y3)
+
+# --- Main program ---
+print("Elliptic Curve: yÂ² = xÂ³ + a*x + b (mod p)")
+
+a = int(input("Enter value of a: "))
+b = int(input("Enter value of b: "))
+p = int(input("Enter prime p: "))
+
+x1 = int(input("Enter x1: "))
+y1 = int(input("Enter y1: "))
+x2 = int(input("Enter x2: "))
+y2 = int(input("Enter y2: "))
+
+P = (x1, y1)
+Q = (x2, y2)
+
+R = add_points(a, p, P, Q)
+print("\nResulting Point R = P + Q =", R)
+
+
+----------------------------------------------------------------------------------------------------------------
+
+# Find modular inverse of a number (a^-1 mod p)
+def mod_inverse(a, p):
+a = a % p
+for i in range(1, p):
+if (a * i) % p == 1:
+return i
+return None
+
+# Point addition on elliptic curve
+def point_add(P, Q, a, p):
+if P == (None, None):
+return Q
+if Q == (None, None):
+return P
+
+x1, y1 = P
+x2, y2 = Q
+
+if x1 == x2 and (y1 + y2) % p == 0:
+return (None, None)
+
+if P != Q:
+num = (y2 - y1) % p
+den = (x2 - x1) % p
+else:  # Point doubling
+num = (3 * x1 * x1 + a) % p
+den = (2 * y1) % p
+
+inv = mod_inverse(den, p)
+if inv is None:
+print("No modular inverse found!")
+return (None, None)
+
+m = (num * inv) % p
+x3 = (m * m - x1 - x2) % p
+y3 = (m * (x1 - x3) - y1) % p
+
+return (x3, y3)
+
+# Scalar multiplication (n * P)
+def scalar_mult(n, P, a, p):
+R = (None, None)
+for _ in range(n):
+R = point_add(R, P, a, p)
+return R
+
+# --- Main Program ---
+print("Elliptic Curve: yÂ² = xÂ³ + a*x + b (mod p)")
+
+a = int(input("Enter value of a: "))
+b = int(input("Enter value of b: "))
+p = int(input("Enter prime p: "))
+
+Gx = int(input("Enter base point Gx: "))
+Gy = int(input("Enter base point Gy: "))
+G = (Gx, Gy)
+
+# Private key
+nA = int(input("Enter private key nA: "))
+
+# Public key: PA = nA * G
+PA = scalar_mult(nA, G, a, p)
+print("Public key PA =", PA)
+
+# Message point
+Mx = int(input("Enter message point Mx: "))
+My = int(input("Enter message point My: "))
+M = (Mx, My)
+
+# Random integer k
+k = int(input("Enter random integer k: "))
+
+# Encryption
+C1 = scalar_mult(k, G, a, p)
+temp = scalar_mult(k, PA, a, p)
+C2 = point_add(M, temp, a, p)
+
+print("\nCiphertext:")
+print("C1 =", C1)
+print("C2 =", C2)
+
+# Decryption
+nA_C1 = scalar_mult(nA, C1, a, p)
+# Compute Câ‚‚ - nAÃ—Câ‚ â†’ same as adding Câ‚‚ and negative of nAÃ—Câ‚
+neg_point = (nA_C1[0], (-nA_C1[1]) % p)
+M_decrypted = point_add(C2, neg_point, a, p)
+
+print("\nDecrypted Message Point =", M_decrypted)
+
+
+
+
+### ðŸ§  Example Run
+
+
+# Elliptic Curve: yÂ² = xÂ³ + a*x + b (mod p)
+# Enter value of a: 2
+# Enter value of b: 2
+# Enter prime p: 17
+# Enter base point Gx: 5
+# Enter base point Gy: 1
+# Enter private key nA: 7
+# Public key PA = (0, 6)
+# Enter message point Mx: 6
+# Enter message point My: 3
+# Enter random integer k: 3
+
+# Ciphertext:
+# C1 = (10, 6)
+# C2 = (3, 1)
+
+# Decrypted Message Point = (6, 3)
+
+
+# âœ… You can see the decrypted point matches the original message point.
+
+# ---
+
+-----------------------------------------------------------------------------------------------------------
+
+#To generate playfair matrix
+def generate_playfair_matrix(key):
+key=str(key).upper().replace('J','I')
+matrix=[]
+for char in key:
+if char not in matrix and char.isalpha():
+matrix.append(char)
+for char in 'ABCDEFGHIKLMNOPQRSTUVWXYZ':
+if char not in matrix:
+matrix.append(char)
+return [matrix[i:i+5] for i in range(0,25,5)]
+#To find position of a letter in matrix
+def find_pos(matrix,letter):
+for i,row in enumerate(matrix):
+if letter in row:
+return i,row.index(letter)
+return None
+#To format plaintext into digraphs
+def format_plaintext(plaintext):
+plaintext =
+str(plaintext).upper().replace('J','I').replace(' ','')
+pairs=[]
+i=0
+while i<len(plaintext):
+a=plaintext[i]
+if i+1<len(plaintext):
+b=plaintext[i+1]
+if a==b:
+pairs.append(a+'X')
+i+=1
+else:
+pairs.append(a+b)
+i+=2
+else:
+pairs.append(a+'X')
+i+=1
+return pairs
+#Encryption
+def encrypt_playfair(plaintext,key):
+matrix=generate_playfair_matrix(key)
+pairs=format_plaintext(plaintext)
+ciphertext=""
+for pair in pairs:
+r1,c1=find_pos(matrix,pair[0])
+r2,c2=find_pos(matrix,pair[1])
+if r1==r2:
+ciphertext+=matrix[r1][(c1+1)%5]
+ciphertext+=matrix[r2][(c2+1)
+elif c1==c2:
+ciphertext+=matrix[(r1+1)%5][c1]
+ciphertext+=matrix[(r2+1)%5][c2]
+else:
+ciphertext+=matrix[r1][c2]
+ciphertext+=matrix[r2
+return ciphertext
+#Decryption
+def decrypt_playfair(ciphertext,key):
+matrix=generate_playfair_matrix(key)
+pairs=[ciphertext[i:i+2] for i in
+range(0,len(ciphertext),2)]
+plaintext=""
+for pair in pairs:
+r1,c1=find_pos(matrix,pair[0])
+r2,c2=find_pos(matrix,pair[1])
+if r1==r2:
+plaintext+=matrix[r1][(c1-1)%5]
+plaintext+=matrix[r2][(c2-1)%5]
+elif c1==c2:
+plaintext+=matrix[(r1-1)%5][c1]
+plaintext+=matrix[(r2-1)%5][c2]
+else:
+plaintext+=matrix[r1][c2]
+plaintext+=matrix[r2][c1]
+return plaintext
+#Example
+key=input("Enter key:")
+plaintext=input("Enter plaintext:")
+cipher=encrypt_playfair(plaintext,key)
+print("\nEncrypted Text:",cipher)
+decrypted=decrypt_playfair(cipher,key)
+print("Decrypted Text:",decrypted)

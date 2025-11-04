@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*.bak
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Jupyter Notebook specific files
+.ipynb_checkpoints/
+
+# Database files
+*.sqlite3
+*.db
+
+# Configuration files (if sensitive)
+config.ini
+.env
+
+# Build artifacts
+dist/
+build/
+
+# Miscellaneous
+*.egg
+*.whl
